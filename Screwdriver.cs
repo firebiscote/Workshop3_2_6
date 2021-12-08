@@ -1,15 +1,19 @@
 ﻿using System;
-using System.Threading;
 
 namespace Workshop3_2_6
 {
-    public static class Screwdriver
+    public class Screwdriver : ITool
     {
-        public static Semaphore Semaphore = new Semaphore(0, 2);
+        public string Name { get; }
 
-        public static void Used()
+        public Screwdriver(string name)
         {
-            Console.WriteLine("ScrewDriver used !");
+            Name = name;
+        }
+
+        public void Use()
+        {
+            Console.WriteLine($"{Name} used !");
         }
     }
 }

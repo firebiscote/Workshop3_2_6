@@ -5,44 +5,79 @@ namespace Workshop3_2_6
 {
     class Program
     {
-        private delegate void DELG(object state);
-        private static string wrench = "Utilisation de la wrench";
-        private static string screwdriver = "Utilisation du screwdriver";
-        private static Semaphore wrenchS;
-        private static Semaphore screwdriverS;
-        public static int totalWork;
+        private delegate void ThreadWorker(object state);
 
         static void Main(string[] args)
         {
-            totalWork = 0;
-            wrenchS = new Semaphore(2, 2);
-            screwdriverS = new Semaphore(2, 2);
-            DELG d = (state) =>
-            {
-                wrenchS.WaitOne();
-                screwdriverS.WaitOne();
-                Console.WriteLine(wrench);
-                Console.WriteLine(screwdriver);
-                Console.WriteLine($"Work {state}");
-                totalWork++;
-                wrenchS.Release();
-                screwdriverS.Release();
-            };
-            DateTime start = DateTime.Now, end = DateTime.Now;
-            while (totalWork < 220) {
-                Thread t1 = new Thread(d.Invoke);
-                Thread t2 = new Thread(d.Invoke);
-                Thread t3 = new Thread(d.Invoke);
-                Thread t4 = new Thread(d.Invoke);
+            Worker w1 = new Worker("worker1");
+            Worker w2 = new Worker("worker2");
+            Worker w3 = new Worker("worker3");
+            Worker w4 = new Worker("worker4");
 
-                t1.Start("T1");
-                t2.Start("T2");
-                t3.Start("T3");
-                t4.Start("T4");
+            ITool wrench1 = new Wrench("w1");
+            ITool wrench2 = new Wrench("w2");
+            ITool screwdriver1 = new Screwdriver("s1");
+            ITool screwdriver2 = new Screwdriver("s2");
+
+            ThreadWorker threadWorker = (o) =>
+            {
+                Worker worker = (Worker)o;
+                while (Worker.TotalBuiltItems < 230)
+                {
+                    switch (worker.Name[^1])
+                    {
+                        case '1':
+                            if (Monitor.TryEnter(wrench1, 3000) && Monitor.TryEnter(screwdriver1, 3000))
+                            {
+                                worker.Work(wrench1, screwdriver1);
+                                Monitor.Exit(wrench1);
+                                Monitor.Exit(screwdriver1);
+                            }
+                            break;
+                        case '2':
+                            if (Monitor.TryEnter(wrench1, 3000) && Monitor.TryEnter(screwdriver2, 3000))
+                            {
+                                worker.Work(wrench1, screwdriver2);
+                                Monitor.Exit(wrench1);
+                                Monitor.Exit(screwdriver2);
+                            }
+                            break;
+                        case '3':
+                            if (Monitor.TryEnter(wrench2, 3000) && Monitor.TryEnter(screwdriver2, 3000))
+                            {
+                                worker.Work(wrench2, screwdriver2);
+                                Monitor.Exit(wrench2);
+                                Monitor.Exit(screwdriver2);
+                            }
+                            break;
+                        case '4':
+                            if (Monitor.TryEnter(wrench2, 3000) && Monitor.TryEnter(screwdriver1, 3000))
+                            {
+                                worker.Work(wrench2, screwdriver1);
+                                Monitor.Exit(wrench2);
+                                Monitor.Exit(screwdriver1);
+                            }
+                            break;
+                    }
+                }
+            };
+
+            Thread t1 = new Thread(threadWorker.Invoke);
+            Thread t2 = new Thread(threadWorker.Invoke);
+            Thread t3 = new Thread(threadWorker.Invoke);
+            Thread t4 = new Thread(threadWorker.Invoke);
+
+            t1.Start(w1);
+            t2.Start(w2);
+            t3.Start(w3);
+            t4.Start(w4);
+
+            DateTime start = DateTime.Now, end = DateTime.Now;
+            while (Worker.TotalBuiltItems < 220)
+            {
                 end = DateTime.Now;
             }
             Console.WriteLine(end - start);
-
         }
     }
 }

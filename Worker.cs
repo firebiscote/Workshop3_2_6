@@ -5,30 +5,25 @@ namespace Workshop3_2_6
 {
     public class Worker
     {
-        public static Semaphore WrenchSemaphore = new Semaphore(2, 2);
-        public static Semaphore ScrewdriverSemaphore = new Semaphore(2, 2);
-        public int TotalBuiltItems { get; set; }
+        public static int TotalBuiltItems = 0;
+        public string Name { get; }
+        public int WorkerBuiltItem { get; set; }
 
-        public Worker()
+        public Worker(string name) 
         {
-            TotalBuiltItems = 0;
+            Name = name;
+            WorkerBuiltItem = 0;
         }
 
-        public void TryToWork()
+        public void Work(ITool toolLeft, ITool toolRight)
         {
-            WrenchSemaphore.WaitOne();
-            ScrewdriverSemaphore.WaitOne();
-            Wrench.Used();
-            Screwdriver.Used();
+            if (toolLeft.GetType() == toolRight.GetType())
+                throw new Exception();
             Thread.Sleep(2000);
-            WrenchSemaphore.Release();
-            ScrewdriverSemaphore.Release();
-            Work();
-        }
-
-        public void Work()
-        {
-            Console.WriteLine("w");
+            toolLeft.Use();
+            toolRight.Use();
+            Console.WriteLine($"{Name} Built !");
+            WorkerBuiltItem++;
             TotalBuiltItems++;
         }
     }
